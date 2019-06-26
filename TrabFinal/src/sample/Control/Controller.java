@@ -2,6 +2,8 @@ package sample.Control;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -16,7 +18,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
-
+import java.util.function.Predicate;
 
 
 public class Controller implements Initializable {
@@ -56,6 +58,8 @@ public class Controller implements Initializable {
     @FXML private RadioButton k7;
     @FXML private RadioButton vinil;
 
+    @FXML private TextField searchAutor;
+
 
     private ArrayList<Autor> autores = new ArrayList<>();
     private ArrayList<Musica> musicas = new ArrayList<>();
@@ -66,17 +70,45 @@ public class Controller implements Initializable {
     private ObservableList<Album> observableListAlbuns;
     private ObservableList<Autor> observableListAutores;
     private ObservableList<Item> observableListItem;
+
+
+
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        readFile();
         gerarTableAutor();
         gerarTableMusica();
         gerarTableAlbum();
         gerarTableItem();
-        tvAutor.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> selecionaAutor(newValue));
-        tvMusica.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> selecionaMusica(newValue));
-        tvAlbum.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> selecionaAlbum(newValue));
-        tvItem.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> selecionaItem(newValue));
+        readFile();
+
+    }
+    public void pesquisaAutor(){
+        FilteredList<Autor> filteredListAutor = new FilteredList<>(observableListAutores, e -> true);
+
+
+        searchAutor.setOnKeyReleased(event -> {
+            searchAutor.textProperty().addListener((observable, oldValue, newValue) ->{
+
+                filteredListAutor.setPredicate((Predicate<? super Autor>) a->{
+                    if(newValue.isEmpty()) {
+                        return true;
+                    }
+                    String lowerCase = newValue.toLowerCase();
+                   if (a.getNome().toLowerCase().contains(lowerCase)){
+                       return true;
+                   }
+                    return false;
+
+                });
+                SortedList<Autor> sortedAutor = new SortedList<>(filteredListAutor);
+                sortedAutor.comparatorProperty().bind(tvAutor.comparatorProperty());
+                tvAutor.setItems(sortedAutor);
+            });
+
+        });
+
+
 
     }
 
@@ -115,20 +147,21 @@ public class Controller implements Initializable {
 
     public void addAutor(){
         Autor autor = new Autor(tfNome.getText(), tfCity.getText(), datePicker.getValue());
-        tvAutor.getItems().add(autor);
+        observableListAutores.add(autor);
         File f = new File("autores.bin");
 
         try(FileOutputStream fos = new FileOutputStream(f);
             BufferedOutputStream bos = new BufferedOutputStream(fos);
             ObjectOutputStream oos = new ObjectOutputStream(bos)
         ){
-
-            oos.writeObject(autor);
+            for(Autor a: observableListAutores) {
+                oos.writeObject(a);
+            }
 
         }catch (IOException e){
             System.out.println("Erro ao escrever o arquivo...");
+            e.printStackTrace();
         }
-
 
     }
     public void addAlbum(){
@@ -144,82 +177,65 @@ public class Controller implements Initializable {
             check = "Vinil";
         }
 
-
-        tvAlbum.getItems().add(album);
+        observableListAlbuns.add(album);
         Item item = new Item(check, tfTitulo.getText(), 0);
-        tvItem.getItems().add(item);
+        observableListItem.add(item);
     }
 
     public void addMusica(){
         Musica musica = new Musica(tfMusicaNome.getText(), tfMusicaComp.getText(), tfMusicaDuracao.getText());
-        tvMusica.getItems().add(musica);
+        observableListMusicas.add(musica);
     }
 
-    public void selecionaAutor(Autor autor){
-        if(autor != null) {
-            System.out.println(autor.getNome() + " selecionado com sucesso.");
-        }
-    }
-    public void selecionaMusica(Musica musica){
-        if(musica != null) {
-            System.out.println(musica.getNome() + " selecionado com sucesso.");
-        }
-    }
-
-    public void selecionaAlbum(Album album){
-        if(album != null) {
-            System.out.println(album.getNome() + " selecionado com sucesso.");
-        }
-    }
-    public void selecionaItem(Item item){
-        if(item != null) {
-            System.out.println(item.getTipo() + " selecionado com sucesso.");
-        }
-    }
 
 
     @FXML
     public void removeAutor(){
         Autor autor = tvAutor.getSelectionModel().getSelectedItem();
         if(autor != null) {
-            tvAutor.getItems().remove(autor);
+            observableListAutores.remove(autor);
+
+
         }
     }
     @FXML
     public void removeMusica(){
         Musica musica = tvMusica.getSelectionModel().getSelectedItem();
         if( musica != null) {
-            tvMusica.getItems().remove(musica);
+            observableListMusicas.remove(musica);
         }
     }
     @FXML
     public void removeAlbum(){
         Album album = tvAlbum.getSelectionModel().getSelectedItem();
         if( album != null) {
-            tvAlbum.getItems().remove(album);
+            observableListAlbuns.remove(album);
         }
     }
     @FXML
     public void removeItem(){
         Item item = tvItem.getSelectionModel().getSelectedItem();
         if( item != null) {
-            tvItem.getItems().remove(item);
+            observableListItem.remove(item);
         }
     }
     public void readFile(){
         File f = new File("autores.bin");
-
-        Autor p=null;
-        ArrayList<Autor> ps=null;
+        Autor a;
 
         try(FileInputStream fis = new FileInputStream(f);
             BufferedInputStream bis = new BufferedInputStream(fis);
             ObjectInputStream ois = new ObjectInputStream(bis);
         ){
 
-            p = (Autor) ois.readObject();
-            System.out.println(p);
+            //tvAutor.setItems((ObservableList<Autor>) ois.readObject());
 
+            while(true) {
+                a = (Autor) ois.readObject();
+                if(a != null) { observableListAutores.add(a); }
+                else {
+                    break; }
+            }
 
         }catch (IOException e){
             System.out.println(e.getMessage());
@@ -228,6 +244,7 @@ public class Controller implements Initializable {
         }
 
     }
+
 
 
 

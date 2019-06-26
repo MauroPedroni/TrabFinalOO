@@ -16,13 +16,13 @@
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="570.0" prefWidth="833.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Control.Controller">
    <children>
-      <TabPane layoutX="21.0" layoutY="99.0" prefHeight="464.0" prefWidth="793.0" tabClosingPolicy="UNAVAILABLE">
+      <TabPane layoutX="21.0" layoutY="101.0" prefHeight="462.0" prefWidth="793.0" tabClosingPolicy="UNAVAILABLE">
         <tabs>
           <Tab text="Autores">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <TableView fx:id="tvAutor" prefHeight="372.0" prefWidth="793.0">
+                        <TableView fx:id="tvAutor" layoutY="27.0" prefHeight="345.0" prefWidth="793.0">
                           <columns>
                             <TableColumn fx:id="tcAutorNome" prefWidth="75.0" text="Nome" />
                             <TableColumn fx:id="tcAutorCity" prefWidth="75.0" text="Cidade" />
@@ -37,6 +37,7 @@
                         <Button layoutX="652.0" layoutY="372.0" mnemonicParsing="false" onAction="#addAutor" text="Adicionar Novo Autor" />
                         <Button fx:id="btRemove" layoutX="686.0" layoutY="397.0" mnemonicParsing="false" onAction="#removeAutor" text="Remover" />
                         <TextField fx:id="tfNome" layoutY="372.0" prefHeight="25.0" prefWidth="165.0" promptText="Nome" />
+                        <TextField fx:id="searchAutor" layoutY="2.0" onKeyReleased="#pesquisaAutor" prefHeight="25.0" prefWidth="465.0" promptText="Pesquisar Autores" />
                      </children></AnchorPane>
             </content>
           </Tab>
@@ -116,6 +117,5 @@
          <font>
             <Font name="System Bold" size="42.0" />
          </font></Label>
-      <TextField layoutX="21.0" layoutY="76.0" prefHeight="25.0" prefWidth="465.0" promptText="Pesquisar" />
    </children>
 </AnchorPane>
