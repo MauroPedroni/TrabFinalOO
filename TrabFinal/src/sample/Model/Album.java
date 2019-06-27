@@ -1,8 +1,9 @@
 package sample.Model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Album {
+public class Album implements Serializable {
     public Album(String nome, String musicas, String autor) {
         this.nome = nome;
         this.musicas = musicas;

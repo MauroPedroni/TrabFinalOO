@@ -1,6 +1,8 @@
 package sample.Model;
 
-public class Item {
+import java.io.Serializable;
+
+public class Item implements Serializable {
     private String tipo;
     private String album;
     private int posicao;

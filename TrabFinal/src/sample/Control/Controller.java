@@ -59,6 +59,8 @@ public class Controller implements Initializable {
     @FXML private RadioButton vinil;
 
     @FXML private TextField searchAutor;
+    @FXML private TextField searchAlbum;
+    @FXML private TextField searchMusic;
 
 
     private ArrayList<Autor> autores = new ArrayList<>();
@@ -80,7 +82,7 @@ public class Controller implements Initializable {
         gerarTableMusica();
         gerarTableAlbum();
         gerarTableItem();
-        readFile();
+
 
     }
     public void pesquisaAutor(){
@@ -110,6 +112,62 @@ public class Controller implements Initializable {
 
 
 
+    }
+    public void pesquisaAlbum(){
+        FilteredList<Album> filteredListAlbum = new FilteredList<>(observableListAlbuns, e -> true);
+
+
+        searchAlbum.setOnKeyReleased(event -> {
+            searchAlbum.textProperty().addListener((observable, oldValue, newValue) ->{
+
+                filteredListAlbum.setPredicate((Predicate<? super Album>) album->{
+                    if(newValue.isEmpty()) {
+                        return true;
+                    }
+                    String lowerCase = newValue.toLowerCase();
+                    if (album.getNome().toLowerCase().contains(lowerCase)){
+                        return true;
+                    }
+                    else if (album.getAutor().toLowerCase().contains(lowerCase)){
+                        return true;
+                    }
+                    return false;
+
+                });
+                SortedList<Album> albumSortedList = new SortedList<>(filteredListAlbum);
+                albumSortedList.comparatorProperty().bind(tvAlbum.comparatorProperty());
+                tvAlbum.setItems(albumSortedList);
+            });
+
+        });
+    }
+    public void pesquisaMusicas(){
+        FilteredList<Musica> musicaFilteredList = new FilteredList<>(observableListMusicas, e -> true);
+
+
+        searchMusic.setOnKeyReleased(event -> {
+            searchMusic.textProperty().addListener((observable, oldValue, newValue) ->{
+
+                musicaFilteredList.setPredicate((Predicate<? super Musica>) musica->{
+                    if(newValue.isEmpty()) {
+                        return true;
+                    }
+                    String lowerCase = newValue.toLowerCase();
+                    if (musica.getNome().toLowerCase().contains(lowerCase)){
+                        return true;
+                    }
+                    else if (musica.getCompositor().toLowerCase().contains(lowerCase)){
+                        return true;
+                    }
+                    return false;
+
+                });
+                SortedList<Musica> musicaSortedList = new SortedList<>(musicaFilteredList);
+                musicaSortedList.comparatorProperty().bind(tvMusica.comparatorProperty());
+                tvMusica.setItems(musicaSortedList);
+            });
+
+        });
     }
 
     public void gerarTableAutor(){
@@ -150,6 +208,7 @@ public class Controller implements Initializable {
         observableListAutores.add(autor);
         File f = new File("autores.bin");
 
+
         try(FileOutputStream fos = new FileOutputStream(f);
             BufferedOutputStream bos = new BufferedOutputStream(fos);
             ObjectOutputStream oos = new ObjectOutputStream(bos)
@@ -162,6 +221,8 @@ public class Controller implements Initializable {
             System.out.println("Erro ao escrever o arquivo...");
             e.printStackTrace();
         }
+        tfNome.clear();
+        tfCity.clear();
 
     }
     public void addAlbum(){
@@ -176,15 +237,66 @@ public class Controller implements Initializable {
         }else if (vinil.isSelected()){
             check = "Vinil";
         }
-
         observableListAlbuns.add(album);
         Item item = new Item(check, tfTitulo.getText(), 0);
         observableListItem.add(item);
+
+        File f = new File("albuns.bin");
+
+        try(FileOutputStream fos = new FileOutputStream(f);
+            BufferedOutputStream bos = new BufferedOutputStream(fos);
+            ObjectOutputStream oos = new ObjectOutputStream(bos)
+        ){
+            for(Album a: observableListAlbuns) {
+                oos.writeObject(a);
+            }
+
+        }catch (IOException e){
+            System.out.println("Erro ao escrever o arquivo...");
+            e.printStackTrace();
+        }
+
+
+        File file = new File("itens.bin");
+
+        try(FileOutputStream fos = new FileOutputStream(file);
+            BufferedOutputStream bos = new BufferedOutputStream(fos);
+            ObjectOutputStream oos = new ObjectOutputStream(bos)
+        ){
+            for(Item i: observableListItem) {
+                oos.writeObject(i);
+            }
+
+        }catch (IOException e){
+            System.out.println("Erro ao escrever o arquivo...");
+            e.printStackTrace();
+        }
+        tfTitulo.clear();
+        taMusicas.clear();
+        tfAutor.clear();
     }
 
     public void addMusica(){
         Musica musica = new Musica(tfMusicaNome.getText(), tfMusicaComp.getText(), tfMusicaDuracao.getText());
         observableListMusicas.add(musica);
+        File f = new File("musicas.bin");
+
+
+        try(FileOutputStream fos = new FileOutputStream(f);
+            BufferedOutputStream bos = new BufferedOutputStream(fos);
+            ObjectOutputStream oos = new ObjectOutputStream(bos)
+        ){
+            for(Musica a: observableListMusicas) {
+                oos.writeObject(a);
+            }
+
+        }catch (IOException e){
+            System.out.println("Erro ao escrever o arquivo...");
+            e.printStackTrace();
+        }
+        tfMusicaNome.clear();
+        tfMusicaComp.clear();
+        tfMusicaDuracao.clear();
     }
 
 
@@ -219,7 +331,11 @@ public class Controller implements Initializable {
             observableListItem.remove(item);
         }
     }
-    public void readFile(){
+
+
+
+
+    public void loadAutor(){
         File f = new File("autores.bin");
         Autor a;
 
@@ -227,8 +343,6 @@ public class Controller implements Initializable {
             BufferedInputStream bis = new BufferedInputStream(fis);
             ObjectInputStream ois = new ObjectInputStream(bis);
         ){
-
-            //tvAutor.setItems((ObservableList<Autor>) ois.readObject());
 
             while(true) {
                 a = (Autor) ois.readObject();
@@ -243,6 +357,72 @@ public class Controller implements Initializable {
             System.out.println(e.getException());
         }
 
+
+    }
+    public void loadAlbum(){
+        File f = new File("albuns.bin");
+        Album a;
+
+        try(FileInputStream fis = new FileInputStream(f);
+            BufferedInputStream bis = new BufferedInputStream(fis);
+            ObjectInputStream ois = new ObjectInputStream(bis);
+        ){
+
+            while(true) {
+                a = (Album) ois.readObject();
+                if(a != null) { observableListAlbuns.add(a); }
+                else {
+                    break; }
+            }
+
+        }catch (IOException e){
+            System.out.println(e.getMessage());
+        }catch (ClassNotFoundException e){
+            System.out.println(e.getException());
+        }
+    }
+    public void loadMusic(){
+        File f = new File("musicas.bin");
+        Musica a;
+
+        try(FileInputStream fis = new FileInputStream(f);
+            BufferedInputStream bis = new BufferedInputStream(fis);
+            ObjectInputStream ois = new ObjectInputStream(bis);
+        ){
+
+            while(true) {
+                a = (Musica) ois.readObject();
+                if(a != null) { observableListMusicas.add(a); }
+                else {
+                    break; }
+            }
+
+        }catch (IOException e){
+            System.out.println(e.getMessage());
+        }catch (ClassNotFoundException e){
+            System.out.println(e.getException());
+        }
+    }
+    public void loadItens(){
+        File f = new File("itens.bin");
+        Item a;
+
+        try(FileInputStream fis = new FileInputStream(f);
+            BufferedInputStream bis = new BufferedInputStream(fis);
+            ObjectInputStream ois = new ObjectInputStream(bis);
+        ){
+            while(true) {
+                a = (Item) ois.readObject();
+                if(a != null) { observableListItem.add(a); }
+                else {
+                    break; }
+            }
+
+        }catch (IOException e){
+            System.out.println(e.getMessage());
+        }catch (ClassNotFoundException e){
+            System.out.println(e.getException());
+        }
     }
 
 
